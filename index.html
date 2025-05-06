@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Coordinate Plot with Confirmation</title>
+  <title>Interactive Coordinate Plot</title>
   <style>
     #container {
       position: relative;
@@ -27,6 +27,7 @@
     #coordinateList li {
       padding: 5px 0;
       border-bottom: 1px solid #eee;
+      cursor: pointer; /* Change cursor to pointer */
     }
 
     #coordinateCanvas {
@@ -35,7 +36,7 @@
       left: 300px;
       width: 2560px;
       height: 2022px;
-      cursor: pointer; /* Change cursor to a pointer */
+      cursor: crosshair;
     }
 
     #backgroundImage {
@@ -57,16 +58,12 @@
       pointer-events: none;
     }
 
-    .confirmationDialog {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      border: 1px solid black;
-      padding: 20px;
-      z-index: 1000;
-      display: none;
+    .confirmed {
+      color: green;
+    }
+
+    .not-found {
+      color: black;
     }
   </style>
 </head>
@@ -81,13 +78,6 @@
     <img id="backgroundImage" src="MAP_S2.jpg" alt="Background">
     <canvas id="coordinateCanvas" width="2560" height="2022"></canvas>
     <div id="tooltip" class="tooltip"></div>
-
-    <!-- Confirmation Dialog -->
-    <div id="confirmationDialog" class="confirmationDialog">
-      <p>Confirm this coordinate?</p>
-      <button id="confirmButton">Confirm</button>
-      <button id="cancelButton">Cancel</button>
-    </div>
   </div>
 
   <script>
@@ -96,24 +86,18 @@
     const background = document.getElementById('backgroundImage');
     const tooltip = document.getElementById('tooltip');
     const coordinateList = document.getElementById('coordinateList');
-    const confirmationDialog = document.getElementById('confirmationDialog');
-    const confirmButton = document.getElementById('confirmButton');
-    const cancelButton = document.getElementById('cancelButton');
-
-    let selectedCoordIndex = null; // Track index of clicked coordinate
-    const confirmedCoordinates = {}; // Store confirmed state (using object for faster lookup)
 
     // Wait for the image to load
     background.onload = function() {
 
       // Your Coordinates (Replace this with your full dataset)
       const coordinates = [
-        { x: 463, y: 462 },
+{ x: 463, y: 462 },
         { x: 463, y: 512 },
         { x: 470, y: 544 },
         { x: 535, y: 466 },
         { x: 535, y: 538 },
-        { x: 378, y: 469 },
+{ x: 378, y: 469 },
         { x: 382, y: 451 },
         { x: 387, y: 515 },
         { x: 396, y: 479 },
@@ -420,6 +404,7 @@
         { x: 281, y: 839 },
         { x: 287, y: 807 },
         { x: 393, y: 168 },
+        { x: 394, y: 778 },
         { x: 395, y: 203 },
         { x: 399, y: 825 },
         { x: 407, y: 199 },
@@ -549,7 +534,7 @@
         { x: 692, y: 861 },
         { x: 703, y: 793 },
         { x: 778, y: 905 },
-        { x: 779, y: 891 },
+        { x:  779, y: 891 },
         { x: 782, y: 872 },
         { x: 785, y: 147 },
         { x: 787, y: 903 },
@@ -563,175 +548,7 @@
                 { x: 814, y: 871 },
         { x: 821, y: 904 },
         { x: 835, y: 601 },
-        { x: 857, y: 319 },
-        { x: 864, y: 890 },
-        { x: 867, y: 360 },
-        { x: 869, y: 322 },
-        { x: 882, y: 697 },
-        { x: 888, y: 176 },
-        { x: 888, y: 784 },
-        { x: 900, y: 664 },
-        { x: 903, y: 353 },
-        { x: 904, y: 317 },
-        { x: 907, y: 369 },
-        { x: 908, y: 326 },
-        { x: 917, y: 842 },
-        { x: 919, y: 835 },
-        { x: 922, y: 815 },
-        { x: 1, y: 601 },
-        { x: 2, y: 593 },
-        { x: 3, y: 859 },
-        { x: 5, y: 608 },
-        { x: 8, y: 917 },
-        { x: 9, y: 858 },
-        { x: 11, y: 423 },
-        { x: 11, y: 81 },
-        { x: 13, y: 567 },
-        { x: 18, y: 440 },
-        { x: 19, y: 562 },
-        { x: 20, y: 916 },
-        { x: 22, y: 733 },
-        { x: 25, y: 391 },
-        { x: 25, y: 414 },
-        { x: 25, y: 554 },
-        { x: 29, y: 582 },
-        { x: 31, y: 139 },
-        { x: 31, y: 386 },
-        { x: 32, y: 908 },
-        { x: 33, y: 555 },
-        { x: 34, y: 118 },
-        { x: 35, y: 761 },
-        { x: 36, y: 417 },
-        { x: 41, y: 748 },
-        { x: 41, y: 755 },
-        { x: 42, y: 850 },
-        { x: 43, y: 889 },
-        { x: 45, y: 397 },
-        { x: 47, y: 443 },
-        { x: 47, y: 432 },
-        { x: 47, y: 83 },
-        { x: 52, y: 560 },
-        { x: 55, y: 939 },
-        { x: 56, y: 125 },
-        { x: 57, y: 100 },
-        { x: 57, y: 889 },
-        { x: 58, y: 767 },
-        { x: 59, y: 382 },
-        { x: 59, y: 899 },
-        { x: 61, y: 420 },
-        { x: 63, y: 600 },
-        { x: 65, y: 717 },
-        { x: 66, y: 391 },
-        { x: 66, y: 612 },
-        { x: 68, y: 601 },
-        { x: 68, y: 90 },
-        { x: 68, y: 707 },
-        { x: 69, y: 574 },
-        { x: 69, y: 760 },
-        { x: 70, y: 90 },
-        { x: 73, y: 129 },
-        { x: 74, y: 142 },
-        { x: 78, y: 965 },
-        { x: 81, y: 11 },
-        { x: 83, y: 46 },
-        { x: 84, y: 28 },
-        { x: 85, y: 998 },
-        { x: 101, y: 998 },
-        { x: 102, y: 925 },
-        { x: 103, y: 957 },
-        { x: 105, y: 999 },
-        { x: 114, y: 926 },
-        { x: 116, y: 15 },
-        { x: 118, y: 17 },
-        { x: 118, y: 952 },
-        { x: 122, y: 942 },
-        { x: 127, y: 942 },
-        { x: 130, y: 5 },
-        { x: 133, y: 66 },
-        { x: 135, y: 931 },
-        { x: 136, y: 998 },
-        { x: 139, y: 964 },
-        { x: 140, y: 208 },
-        { x: 145, y: 202 },
-        { x: 145, y: 964 },
-        { x: 148, y: 952 },
-        { x: 228, y: 49 },
-        { x: 241, y: 56 },
-        { x: 265, y: 992 },
-        { x: 269, y: 53 },
-        { x: 275, y: 59 },
-        { x: 289, y: 54 },
-        { x: 297, y: 69 },
-        { x: 297, y: 985 },
-        { x: 380, y: 983 },
-        { x: 381, y: 969 },
-        { x: 385, y: 941 },
-        { x: 387, y: 939 },
-        { x: 388, y: 11 },
-        { x: 395, y: 944 },
-        { x: 398, y: 60 },
-        { x: 400, y: 976 },
-        { x: 403, y: 15 },
-        { x: 414, y: 975 },
-        { x: 424, y: 957 },
-        { x: 431, y: 3 },
-        { x: 433, y: 978 },
-        { x: 437, y: 11 },
-        { x: 437, y: 43 },
-        { x: 438, y: 996 },
-        { x: 439, y: 931 },
-        { x: 440, y: 4 },
-        { x: 445, y: 955 },
-        { x: 446, y: 25 },
-        { x: 456, y: 29 },
-        { x: 495, y: 78 },
-        { x: 521, y: 95 },
-        { x: 522, y: 872 },
-        { x: 555, y: 939 },
-        { x: 556, y: 59 },
-        { x: 574, y: 71 },
-        { x: 576, y: 959 },
-        { x: 579, y: 1 },
-        { x: 579, y: 984 },
-        { x: 589, y: 978 },
-        { x: 595, y: 984 },
-        { x: 597, y: 57 },
-        { x: 597, y: 948 },
-        { x: 599, y: 932 },
-        { x: 601, y: 990 },
-        { x: 603, y: 10 },
-        { x: 603, y: 37 },
-        { x: 605, y: 10 },
-        { x: 616, y: 24 },
-        { x: 621, y: 949 },
-        { x: 621, y: 995 },
-        { x: 703, y: 51 },
-        { x: 707, y: 63 },
-        { x: 707, y: 974 },
-        { x: 708, y: 65 },
-        { x: 711, y: 961 },
-        { x: 712, y: 953 },
-        { x: 722, y: 985 },
-        { x: 724, y: 939 },
-        { x: 725, y: 61 },
-        { x: 730, y: 45 },
-        { x: 739, y: 927 },
-        { x: 740, y: 970 },
-        { x: 741, y: 947 },
-        { x: 745, y: 960 },
-        { x: 757, y: 928 },
-        { x: 758, y: 998 },
-        { x: 765, y: 13 },
-        { x: 769, y: 37 },
-        { x: 769, y: 50 },
-        { x: 770, y: 986 },
-        { x: 771, y: 2 },
-        { x: 779, y: 891 },
-        { x: 788, y: 891 },
-        { x: 796, y: 892 },
-        { x: 804, y: 137 },
-        { x: 809, y: 91 },
-        { x: 854, y: 959 },
+        { x: 845, y: 889 },
         { x: 857, y: 319 },
         { x: 858, y: 941 },
         { x: 859, y: 936 },
@@ -801,84 +618,60 @@
       const pointRadius = 5; // Size of the dots
 
       // Plot the coordinates on the canvas AND build the list
-      coordinates.forEach((coord, index) => { // Use index for tracking
-
+      coordinates.forEach((coord, index) => {
         const x = coord.x * scaleX + offsetX;
         const y = canvas.height - (coord.y * scaleY + offsetY); // Flip Y
 
-        coord.scaledX = x;  // Storing scaled for hit detection
-        coord.scaledY = y;
-
         ctx.beginPath();
         ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
-
-        // Draw in green if confirmed, red otherwise
-        ctx.fillStyle = confirmedCoordinates[index] ? 'green' : 'red'; // Check confirmation
         ctx.fill();
+
+        // Store the scaled coordinates back in the coordinate object for hover calculations
+        coord.scaledX = x;
+        coord.scaledY = y;
 
         // Create list item for the coordinates
         const listItem = document.createElement('li');
         listItem.textContent = `X: ${coord.x}, Y: ${coord.y}`;
         coordinateList.appendChild(listItem);
-      });
 
-        //Canvas onclick even listener
-      canvas.addEventListener("click", function(event) {
-          const mouseX = event.offsetX;
-          const mouseY = event.offsetY;
+          listItem.addEventListener('click', function() {
+          // Ask the user to confirm or mark as "not found"
+          const confirmation = prompt(`Coordinate: X: ${coord.x}, Y: ${coord.y}\nConfirm (C) or Not Found (N)?`).toUpperCase();
 
-          let clickedCoordIndex = null; // track Index of clicked coord
-
-          //Detect if the Mouse is over any coordinate
-          for (let i = 0; i < coordinates.length; i++) {
-              const coord = coordinates[i];
-              const distance = Math.sqrt((mouseX - coord.scaledX) ** 2 + (mouseY - coord.scaledY) ** 2);
-
-              if (distance <= pointRadius) {
-                  clickedCoordIndex = i; // set index if the point is found
-                  break;
-              }
-          }
-
-          if (clickedCoordIndex !== null) {
-
-              selectedCoordIndex = clickedCoordIndex;
-
-              confirmationDialog.style.display = "block";
-          }
-
-      });
-
-      confirmButton.addEventListener("click", function() {
-          if (selectedCoordIndex !== null) {
-              confirmedCoordinates[selectedCoordIndex] = true; // Confirm the coord
-        
-
-              // Redraw the coordinate with a green color
-              ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the entire canvas
+          if (confirmation === 'C') {
+            coord.status = 'confirmed';
+            listItem.classList.remove('not-found'); // Remove "not-found" class if present
+            listItem.classList.add('confirmed');
+            ctx.fillStyle = 'green';
+        coordinates.forEach((coord, index) => {
+	   if (coord.status == "confirmed") {
+		  const x = coord.x * scaleX + offsetX;
+		  const y = canvas.height - (coord.y * scaleY + offsetY); // Flip Y
+		  ctx.beginPath();
+		  ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+		  ctx.fill();
+	   }
+	});
+         
+          } else if (confirmation === 'N') {
+            coord.status = 'not-found';
+            listItem.classList.remove('confirmed'); // Remove "confirmed" class if present
+            listItem.classList.add('not-found');
+         ctx.fillStyle = 'black';
               coordinates.forEach((coord, index) => {
-                  const x = coord.x * scaleX + offsetX;
-                  const y = canvas.height - (coord.y * scaleY + offsetY); // Flip Y
-
-                  ctx.beginPath();
-                  ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
-
-                  // Draw in green if confirmed, red otherwise
-                  ctx.fillStyle = confirmedCoordinates[index] ? 'green' : 'red'; // Check confirmation
-                  ctx.fill();
-              });
-
-              confirmationDialog.style.display = "none";  // Hide the modal
-              selectedCoordIndex = null;    //reset index
+	   if (coord.status == "not-found") {
+		  const x = coord.x * scaleX + offsetX;
+		  const y = canvas.height - (coord.y * scaleY + offsetY); // Flip Y
+		  ctx.beginPath();
+		  ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+		  ctx.fill();
+	   }
+	});
           }
+        });
 
       });
-
-      cancelButton.addEventListener("click", function() {
-          confirmationDialog.style.display = "none"; // hide confirmation Dialog
-          selectedCoordIndex = null;  // Reset index
-      });
-
       // Mousemove event listener for hover effect
       canvas.addEventListener('mousemove', function(event) {
         const mouseX = event.offsetX;
@@ -897,14 +690,13 @@
           }
         }
 
-        if (hoveredCoord) {
+       if (hoveredCoord) {
           // Show tooltip near the mouse
           tooltip.style.left = mouseX + 10 + 'px';
           tooltip.style.top = mouseY + 10 + 'px';
-
           // This is where the coords that show up in the hover are changed
           tooltip.textContent = `X: ${hoveredCoord.x}, Y: ${hoveredCoord.y}`;
-          tooltip.style.display = 'block';
+        tooltip.style.display = 'block';
         } else {
           // Hide the tooltip
           tooltip.style.display = 'none';
