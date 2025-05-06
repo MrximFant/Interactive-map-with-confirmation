@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coordinate Plot with Confirmation</title>
+  <style>
+    #container {
+      position: relative;
+      width: 2560px;
+      height: 2022px;
+      display: flex;
+    }
+
+    #coordinateListContainer {
+      width: 300px;
+      height: 100%;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    #coordinateList {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #coordinateList li {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    #coordinateCanvas {
+      position: absolute;
+      top: 0;
+      left: 300px;
+      width: 2560px;
+      height: 2022px;
+      cursor: pointer; /* Change cursor to a pointer */
+    }
+
+    #backgroundImage {
+      position: absolute;
+      top: 0;
+      left: 300px;
+      width: 100%;
+      height: 100%;
+      object-fit: none;
+    }
+
+    .tooltip {
+      position: absolute;
+      background-color: white;
+      border: 1px solid black;
+      padding: 5px;
+      font-size: 12px;
+      display: none;
+      pointer-events: none;
+    }
+
+    .confirmationDialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      border: 1px solid black;
+      padding: 20px;
+      z-index: 1000;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="container">
+    <div id="coordinateListContainer">
+      <h3>Coordinates</h3>
+      <ul id="coordinateList"></ul>
+    </div>
+
+    <img id="backgroundImage" src="MAP_S2.jpg" alt="Background">
+    <canvas id="coordinateCanvas" width="2560" height="2022"></canvas>
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmationDialog" class="confirmationDialog">
+      <p>Confirm this coordinate?</p>
+      <button id="confirmButton">Confirm</button>
+      <button id="cancelButton">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('coordinateCanvas');
+    const ctx = canvas.getContext('2d');
+    const background = document.getElementById('backgroundImage');
+    const tooltip = document.getElementById('tooltip');
+    const coordinateList = document.getElementById('coordinateList');
+    const confirmationDialog = document.getElementById('confirmationDialog');
+    const confirmButton = document.getElementById('confirmButton');
+    const cancelButton = document.getElementById('cancelButton');
+
+    let selectedCoordIndex = null; // Track index of clicked coordinate
+    const confirmedCoordinates = {}; // Store confirmed state (using object for faster lookup)
+
+    // Wait for the image to load
+    background.onload = function() {
+
+      // Your Coordinates (Replace this with your full dataset)
+      const coordinates = [
+{ x: 463, y: 462 },
+        { x: 463, y: 512 },
+        { x: 470, y: 544 },
+        { x: 535, y: 466 },
+        { x: 535, y: 538 },
+{ x: 378, y: 469 },
+        { x: 382, y: 451 },
+        { x: 387, y: 515 },
+        { x: 396, y: 479 },
+        { x: 404, y: 517 },
+        { x: 412, y: 489 },
+        { x: 428, y: 481 },
+        { x: 439, y: 508 },
+        { x: 465, y: 618 },
+        { x: 472, y: 621 },
+        { x: 476, y: 391 },
+        { x: 480, y: 603 },
+        { x: 483, y: 624 },
+        { x: 485, y: 415 },
+        { x: 489, y: 552 },
+        { x: 491, y: 398 },
+        { x: 494, y: 415 },
+        { x: 508, y: 435 },
+        { x: 508, y: 568 },
+        { x: 510, y: 601 },
+        { x: 517, y: 390 },
+        { x: 517, y: 418 },
+        { x: 521, y: 551 },
+        { x: 524, y: 397 },
+        { x: 530, y: 434 },
+        { x: 535, y: 594 },
+        { x: 537, y: 594 },
+        { x: 539, y: 419 },
+        { x: 547, y: 596 },
+        { x: 564, y: 479 },
+        { x: 564, y: 531 },
+        { x: 579, y: 525 },
+        { x: 596, y: 545 },
+        { x: 599, y: 507 },
+        { x: 599, y: 528 },
+        { x: 600, y: 485 },
+        { x: 601, y: 528 },
+        { x: 602, y: 485 },
+        { x: 617, y: 474 },
+        { x: 302, y: 401 },
+        { x: 304, y: 394 },
+        { x: 307, y: 608 },
+        { x: 308, y: 585 },
+        { x: 324, y: 599 },
+        { x: 324, y: 390 },
+        { x: 325, y: 424 },
+        { x: 327, y: 592 },
+        { x: 336, y: 570 },
+        { x: 338, y: 555 },
+        { x: 338, y: 566 },
+        { x: 338, y: 380 },
+        { x: 339, y: 435 },
+        { x: 340, y: 566 },
+        { x: 352, y: 607 },
+        { x: 359, y: 388 },
+        { x: 362, y: 385 },
+        { x: 369, y: 432 },
+        { x: 372, y: 442 },
+        { x: 372, y: 568 },
+        { x: 377, y: 368 },
+        { x: 382, y: 345 },
+        { x: 397, y: 367 },
+        { x: 396, y: 691 },
+        { x: 408, y: 688 },
+        { x: 410, y: 679 },
+        { x: 410, y: 686 },
+        { x: 412, y: 342 },
+        { x: 414, y: 679 },
+        { x: 418, y: 373 },
+        { x: 422, y: 301 },
+        { x: 424, y: 628 },
+        { x: 426, y: 309 },
+        { x: 430, y: 695 },
+        { x: 432, y: 651 },
+        { x: 434, y: 301 },
+        { x: 439, y: 635 },
+        { x: 439, y: 638 },
+        { x: 441, y: 349 },
+        { x: 544, y: 319 },
+        { x: 552, y: 319 },
+        { x: 553, y: 632 },
+        { x: 560, y: 661 },
+        { x: 566, y: 307 },
+        { x: 567, y: 623 },
+        { x: 570, y: 633 },
+        { x: 573, y: 696 },
+        { x: 577, y: 313 },
+        { x: 578, y: 340 },
+        { x: 579, y: 320 },
+        { x: 579, y: 370 },
+        { x: 590, y: 303 },
+        { x: 601, y: 334 },
+        { x: 603, y: 659 },
+        { x: 620, y: 679 },
+        { x: 621, y: 347 },
+        { x: 623, y: 361 },
+        { x: 624, y: 697 },
+        { x: 628, y: 431 },
+        { x: 634, y: 615 },
+        { x: 637, y: 388 },
+        { x: 639, y: 388 },
+        { x: 646, y: 416 },
+        { x: 653, y: 441 },
+        { x: 661, y: 445 },
+        { x: 666, y: 577 },
+        { x: 670, y: 570 },
+        { x: 677, y: 574 },
+        { x: 679, y: 428 },
+        { x: 679, y: 428 },
+        { x: 682, y: 612 },
+        { x: 685, y: 611 },
+        { x: 685, y: 595 },
+        { x: 686, y: 387 },
+        { x: 686, y: 596 },
+        { x: 686, y: 691 },
+        { x: 687, y: 571 },
+        { x: 687, y: 611 },
+        { x: 688, y: 581 },
+        { x: 689, y: 439 },
+        { x: 689, y: 287 },
+        { x: 232, y: 502 },
+        { x: 233, y: 543 },
+        { x: 234, y: 407 },
+        { x: 234, y: 545 },
+        { x: 237, y: 361 },
+        { x: 238, y: 518 },
+        { x: 239, y: 639 },
+        { x: 240, y: 633 },
+        { x: 243, y: 632 },
+        { x: 244, y: 632 },
+        { x: 245, y: 741 },
+        { x: 246, y: 632 },
+        { x: 250, y: 518 },
+        { x: 254, y: 679 },
+        { x: 254, y: 680 },
+        { x: 257, y: 725 },
+        { x: 262, y: 324 },
+        { x: 262, y: 536 },
+        { x: 265, y: 312 },
+        { x: 265, y: 646 },
+        { x: 267, y: 688 },
+        { x: 267, y: 290 },
+        { x: 267, y: 741 },
+        { x: 268, y: 284 },
+        { x: 269, y: 324 },
+        { x: 270, y: 302 },
+        { x: 272, y: 289 },
+        { x: 274, y: 318 },
+        { x: 275, y: 359 },
+        { x: 278, y: 290 },
+        { x: 281, y: 332 },
+        { x: 283, y: 507 },
+        { x: 284, y: 533 },
+        { x: 287, y: 329 },
+        { x: 287, y: 368 },
+        { x: 288, y: 639 },
+        { x: 290, y: 660 },
+        { x: 291, y: 324 },
+        { x: 296, y: 649 },
+        { x: 297, y: 370 },
+        { x: 298, y: 532 },
+        { x: 311, y: 280 },
+        { x: 311, y: 709 },
+        { x: 318, y: 751 },
+        { x: 319, y: 270 },
+        { x: 320, y: 641 },
+        { x: 322, y: 747 },
+        { x: 324, y: 741 },
+        { x: 325, y: 321 },
+        { x: 329, y: 753 },
+        { x: 332, y: 730 },
+        { x: 334, y: 618 },
+        { x: 336, y: 250 },
+        { x: 340, y: 533 },
+        { x: 342, y: 423 },
+        { x: 348, y: 281 },
+        { x: 350, y: 353 },
+        { x: 352, y: 252 },
+        { x: 353, y: 321 },
+        { x: 354, y: 318 },
+        { x: 356, y: 752 },
+        { x: 356, y: 376 },
+        { x: 357, y: 370 },
+        { x: 358, y: 359 },
+        { x: 362, y: 278 },
+        { x: 373, y: 733 },
+        { x: 374, y: 275 },
+        { x: 376, y: 275 },
+        { x: 377, y: 328 },
+        { x: 379, y: 276 },
+        { x: 380, y: 258 },
+        { x: 382, y: 350 },
+        { x: 383, y: 720 },
+        { x: 384, y: 268 },
+        { x: 387, y: 340 },
+        { x: 450, y: 182 },
+        { x: 450, y: 280 },
+        { x: 452, y: 264 },
+        { x: 459, y: 267 },
+        { x: 467, y: 757 },
+        { x: 472, y: 722 },
+        { x: 474, y: 292 },
+        { x: 479, y: 278 },
+        { x: 488, y: 283 },
+        { x: 495, y: 707 },
+        { x: 524, y: 722 },
+        { x: 533, y: 229 },
+        { x: 541, y: 245 },
+        { x: 541, y: 269 },
+        { x: 546, y: 253 },
+        { x: 547, y: 741 },
+        { x: 547, y: 739 },
+        { x: 547, y: 764 },
+        { x: 564, y: 255 },
+        { x: 631, y: 761 },
+        { x: 635, y: 292 },
+        { x: 636, y: 269 },
+        { x: 646, y: 290 },
+        { x: 651, y: 727 },
+        { x: 660, y: 729 },
+        { x: 664, y: 743 },
+        { x: 666, y: 286 },
+        { x: 666, y: 743 },
+        { x: 667, y: 258 },
+        { x: 667, y: 709 },
+        { x: 667, y: 741 },
+        { x: 669, y: 258 },
+        { x: 669, y: 709 },
+        { x: 670, y: 740 },
+        { x: 671, y: 767 },
+        { x: 682, y: 239 },
+        { x: 689, y: 277 },
+        { x: 695, y: 275 },
+        { x: 701, y: 462 },
+        { x: 706, y: 487 },
+        { x: 709, y: 459 },
+        { x: 709, y: 651 },
+        { x: 710, y: 667 },
+        { x: 715, y: 455 },
+        { x: 717, y: 636 },
+        { x: 718, y: 536 },
+        { x: 719, y: 350 },
+        { x: 720, y: 546 },
+        { x: 723, y: 681 },
+        { x: 727, y: 342 },
+        { x: 737, y: 372 },
+        { x: 737, y: 628 },
+        { x: 739, y: 372 },
+        { x: 742, y: 638 },
+        { x: 744, y: 163 },
+        { x: 748, y: 495 },
+        { x: 753, y: 163 },
+        { x: 753, y: 326 },
+        { x: 753, y: 670 },
+        { x: 758, y: 303 },
+        { x: 761, y: 325 },
+        { x: 762, y: 540 },
+        { x: 763, y: 325 },
+        { x: 766, y: 371 },
+        { x: 767, y: 311 },
+        { x: 769, y: 354 },
+        { x: 770, y: 328 },
+        { x: 771, y: 354 },
+        { x: 773, y: 506 },
+        { x: 774, y: 197 }
+];
+
+      // Image and Coordinate System Information
+      const imageWidth = 2560;
+      const imageHeight = 2022;
+      const coordSystemWidth = 1000;
+      const coordSystemHeight = 1000;
+
+      // Calculate Scaling Factors
+      const scaleX = imageWidth / coordSystemWidth;
+      const scaleY = imageHeight / coordSystemHeight;
+
+      // Calculate Offsets
+      const offsetX = 0;
+      const offsetY = 0;
+
+      // Set drawing style for the points
+      ctx.fillStyle = 'red';
+      const pointRadius = 5; // Size of the dots
+
+      // Plot the coordinates on the canvas AND build the list
+      coordinates.forEach((coord, index) => { // Use index for tracking
+
+        const x = coord.x * scaleX + offsetX;
+        const y = canvas.height - (coord.y * scaleY + offsetY); // Flip Y
+
+        coord.scaledX = x;  // Storing scaled for hit detection
+        coord.scaledY = y;
+
+        ctx.beginPath();
+        ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+
+        // Draw in green if confirmed, red otherwise
+        ctx.fillStyle = confirmedCoordinates[index] ? 'green' : 'red'; // Check confirmation
+        ctx.fill();
+
+        // Create list item for the coordinates
+        const listItem = document.createElement('li');
+        listItem.textContent = `X: ${coord.x}, Y: ${coord.y}`;
+        coordinateList.appendChild(listItem);
+      });
+
+        //Canvas onclick even listener
+      canvas.addEventListener("click", function(event) {
+          const mouseX = event.offsetX;
+          const mouseY = event.offsetY;
+
+          let clickedCoordIndex = null; // track Index of clicked coord
+
+          //Detect if the Mouse is over any coordinate
+          for (let i = 0; i < coordinates.length; i++) {
+              const coord = coordinates[i];
+              const distance = Math.sqrt((mouseX - coord.scaledX) ** 2 + (mouseY - coord.scaledY) ** 2);
+
+              if (distance <= pointRadius) {
+                  clickedCoordIndex = i; // set index if the point is found
+                  break;
+              }
+          }
+
+          if (clickedCoordIndex !== null) {
+
+              selectedCoordIndex = clickedCoordIndex;
+
+              confirmationDialog.style.display = "block";
+          }
+
+      });
+
+      confirmButton.addEventListener("click", function() {
+          if (selectedCoordIndex !== null) {
+              confirmedCoordinates[selectedCoordIndex] = true; // Confirm the coord
+        
+
+              // Redraw the coordinate with a green color
+              ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the entire canvas
+              coordinates.forEach((coord, index) => {
+                  const x = coord.x * scaleX + offsetX;
+                  const y = canvas.height - (coord.y * scaleY + offsetY); // Flip Y
+
+                  ctx.beginPath();
+                  ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+
+                  // Draw in green if confirmed, red otherwise
+                  ctx.fillStyle = confirmedCoordinates[index] ? 'green' : 'red'; // Check confirmation
+                  ctx.fill();
+              });
+
+              confirmationDialog.style.display = "none";  // Hide the modal
+              selectedCoordIndex = null;    //reset index
+          }
+
+      });
+
+      cancelButton.addEventListener("click", function() {
+          confirmationDialog.style.display = "none"; // hide confirmation Dialog
+          selectedCoordIndex = null;  // Reset index
+      });
+
+      // Mousemove event listener for hover effect
+      canvas.addEventListener('mousemove', function(event) {
+        const mouseX = event.offsetX;
+        const mouseY = event.offsetY;
+
+        let hoveredCoord = null;
+
+        // Find if the mouse is over any coordinate
+        for (let i = 0; i < coordinates.length; i++) {
+          const coord = coordinates[i];
+          const distance = Math.sqrt((mouseX - coord.scaledX) ** 2 + (mouseY - coord.scaledY) ** 2);
+
+          if (distance <= pointRadius) {
+            hoveredCoord = coord;
+            break; // Stop the loop if a coordinate is found
+          }
+        }
+
+        if (hoveredCoord) {
+          // Show tooltip near the mouse
+          tooltip.style.left = mouseX + 10 + 'px';
+          tooltip.style.top = mouseY + 10 + 'px';
+
+          // This is where the coords that show up in the hover are changed
+          tooltip.textContent = `X: ${hoveredCoord.x}, Y: ${hoveredCoord.y}`;
+          tooltip.style.display = 'block';
+        } else {
+          // Hide the tooltip
+          tooltip.style.display = 'none';
+        }
+      });
+    };
+
+    background.src = "MAP_S2.jpg"; // Replace with your image path
+  </script>
+
+</body>
+</html>
